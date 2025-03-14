@@ -1,0 +1,33 @@
+import os
+import win32com.client
+
+def create_shortcut_on_desktop_without_console():
+    # Get the folder where this script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    main_file = os.path.join(script_dir, "main.py")
+    
+    # Check if the main.py file exists
+    if not os.path.exists(main_file):
+        print("main.py not found in the same folder.")
+        return
+    
+    # Get the desktop path
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    shortcut_path = os.path.join(desktop_path, "RunMain.lnk")
+    
+    # Path to pythonw.exe
+    pythonw_path = os.path.join(os.path.dirname(os.sys.executable), "pythonw.exe")
+    
+    # Create the shortcut on the desktop
+    shell = win32com.client.Dispatch("WScript.Shell")
+    shortcut = shell.CreateShortcut(shortcut_path)
+    shortcut.TargetPath = pythonw_path
+    shortcut.Arguments = f'"{main_file}"'
+    shortcut.WorkingDirectory = script_dir
+    shortcut.IconLocation = "python.exe"  # Optionally set a custom icon
+    shortcut.Save()
+    
+    print(f"Shortcut created on your desktop: {shortcut_path}")
+
+if __name__ == "__main__":
+    create_shortcut_on_desktop_without_console()
