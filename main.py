@@ -56,50 +56,55 @@ class UpdateCheckerApp(QWidget):
         # File to store the previous list of post titles
         posts_file = "posts.json"
 
-        # Progress milestones
-        with sync_playwright() as playwright:
-            # Step 1: Launch browser
-            browser = playwright.chromium.launch(headless=True)
-            self.progress_bar.setValue(20)
+        try:
+            # Progress milestones
+            with sync_playwright() as playwright:
+                # Step 1: Launch browser
+                browser = playwright.chromium.launch(headless=True)
+                self.progress_bar.setValue(20)
 
-            # Step 2: Open a new page
-            page = browser.new_page()
-            self.progress_bar.setValue(40)
+                # Step 2: Open a new page
+                page = browser.new_page()
+                self.progress_bar.setValue(40)
 
-            # Step 3: Navigate to the URL
-            url = "https://nullsignal.games/blog/category/news/product-announcements/"
-            page.goto(url)
-            self.progress_bar.setValue(60)
+                # Step 3: Navigate to the URL
+                url = "https://nullsignal.games/blog/category/news/product-announcements/"
+                page.goto(url)
+                self.progress_bar.setValue(60)
 
-            # Step 4: Extract the post titles (adjust selector based on page structure)
-            posts = page.locator(".post-title").all_inner_texts()
-            self.progress_bar.setValue(80)
+                # Step 4: Extract the post titles (adjust selector based on page structure)
+                posts = page.locator(".post-title").all_inner_texts()
+                self.progress_bar.setValue(80)
 
-            # Step 5: Compare posts and update status
-            if os.path.exists(posts_file):
-                with open(posts_file, "r") as file:
-                    previous_posts = json.load(file)
+                # Step 5: Compare posts and update status
+                if os.path.exists(posts_file):
+                    with open(posts_file, "r") as file:
+                        previous_posts = json.load(file)
 
-                # Find new posts by comparing lists
-                new_posts = [post for post in posts if post not in previous_posts]
+                    # Find new posts by comparing lists
+                    new_posts = [post for post in posts if post not in previous_posts]
 
-                if new_posts:
-                    self.status_label.setText(f"New posts detected:\n{', '.join(new_posts)}")
+                    if new_posts:
+                        self.status_label.setText(f"New posts detected:\n{', '.join(new_posts)}")
+                    else:
+                        self.status_label.setText("No new posts detected.")
                 else:
-                    self.status_label.setText("No new posts detected.")
-            else:
-                self.status_label.setText("First-time check; saving current posts.")
+                    self.status_label.setText("First-time check; saving current posts.")
 
-            # Save the current posts to the file
-            with open(posts_file, "w") as file:
-                json.dump(posts, file)
+                # Save the current posts to the file
+                with open(posts_file, "w") as file:
+                    json.dump(posts, file)
 
-            # Step 6: Complete the progress bar
-            self.progress_bar.setValue(100)
-            self.check_button.setEnabled(True)  # Re-enable the button
+                # Step 6: Complete the progress bar
+                self.progress_bar.setValue(100)
+                self.check_button.setEnabled(True)  # Re-enable the button
 
-            # Close the browser
-            browser.close()
+                # Close the browser
+                browser.close()
+        except Exception as e:
+            self.status_label.setText(f"An error occurred: {e}")
+            self.progress_bar.setValue(0)
+            self.check_button.setEnabled(True)
 
 # Main application
 if __name__ == "__main__":
