@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QProgressBar, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QProgressBar, QLabel, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QPixmap
 from playwright.sync_api import sync_playwright
@@ -24,7 +24,7 @@ class UpdateCheckerApp(QWidget):
         self.layout.addWidget(self.header_label)
 
         # Status label
-        self.status_label = QLabel("Click the button to check for updates.", self)
+        self.status_label = QLabel("Checking for updates...", self)
         self.status_label.setWordWrap(True)
         self.layout.addWidget(self.status_label)
 
@@ -38,17 +38,19 @@ class UpdateCheckerApp(QWidget):
         )
         self.layout.addWidget(self.progress_bar)
 
-        # Check button
-        self.check_button = QPushButton("Check for Updates", self)
-        self.check_button.clicked.connect(self.start_progress)
-        self.layout.addWidget(self.check_button)
+        # Check updates button
+        self.check_updates_button = QPushButton("Check for Updates", self)
+        self.check_updates_button.clicked.connect(self.start_progress)
+        self.layout.addWidget(self.check_updates_button)
 
         self.setLayout(self.layout)
 
+        # Start the progress on startup
+        self.start_progress()
+
     def start_progress(self):
-        # Reset the progress bar and disable the button
+        # Reset the progress bar
         self.progress_bar.setValue(0)
-        self.check_button.setEnabled(False)
         self.status_label.setText("Checking for updates...")
         self.check_for_new_posts()
 
@@ -64,7 +66,6 @@ class UpdateCheckerApp(QWidget):
         except (FileNotFoundError, KeyError) as e:
             self.status_label.setText(f"Configuration error: {e}")
             self.progress_bar.setValue(0)
-            self.check_button.setEnabled(True)
             return
 
         all_new_posts = []
@@ -108,7 +109,6 @@ class UpdateCheckerApp(QWidget):
 
                 # Step 6: Complete the progress bar
                 self.progress_bar.setValue(100)
-                self.check_button.setEnabled(True)  # Re-enable the button
 
                 # Close the browser
                 browser.close()
@@ -125,7 +125,6 @@ class UpdateCheckerApp(QWidget):
         except Exception as e:
             self.status_label.setText(f"An error occurred: {e}")
             self.progress_bar.setValue(0)
-            self.check_button.setEnabled(True)
 
 # Main application
 if __name__ == "__main__":
