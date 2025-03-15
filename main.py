@@ -1,7 +1,8 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QProgressBar, QLabel, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QPixmap
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
+import asyncio
 import os
 import json
 
@@ -52,9 +53,9 @@ class UpdateCheckerApp(QWidget):
         # Reset the progress bar
         self.progress_bar.setValue(0)
         self.status_label.setText("Checking for updates...")
-        self.check_for_new_posts()
+        asyncio.run(self.check_for_new_posts())
 
-    def check_for_new_posts(self):
+    async def check_for_new_posts(self):
         # File to store the previous list of post titles
         posts_file = "posts.json"
 
@@ -72,22 +73,22 @@ class UpdateCheckerApp(QWidget):
 
         try:
             # Progress milestones
-            with sync_playwright() as playwright:
-                browser = playwright.chromium.launch(headless=True)
+            async with async_playwright() as playwright:
+                browser = await playwright.chromium.launch(headless=True)
 
                 for url in urls:
                     self.progress_bar.setValue(20)
 
                     # Open a new page
-                    page = browser.new_page()
+                    page = await browser.new_page()
                     self.progress_bar.setValue(40)
 
                     # Navigate to the URL
-                    page.goto(url)
+                    await page.goto(url)
                     self.progress_bar.setValue(60)
 
                     # Extract the post titles (adjust selector based on page structure)
-                    posts = page.locator(".post-title").all_inner_texts()
+                    posts = await page.locator(".post-title").all_inner_texts()
                     self.progress_bar.setValue(80)
 
                     # Compare posts and update status
@@ -110,9 +111,6 @@ class UpdateCheckerApp(QWidget):
                 # Step 6: Complete the progress bar
                 self.progress_bar.setValue(100)
 
-                # Close the browser
-                browser.close()
-
                 if all_new_posts:
                     # Display icon and hyperlink for new posts
                     icon = QPixmap("icon.png")
@@ -121,6 +119,8 @@ class UpdateCheckerApp(QWidget):
                     self.status_label.setOpenExternalLinks(True)
                 else:
                     self.status_label.setText("No new posts detected.")
+
+                await browser.close()
 
         except Exception as e:
             self.status_label.setText(f"An error occurred: {e}")
